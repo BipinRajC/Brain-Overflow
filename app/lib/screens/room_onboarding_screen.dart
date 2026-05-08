@@ -68,8 +68,7 @@ class _RoomOnboardingScreenState extends State<RoomOnboardingScreen>
           .eq('access_code', _joinCodeController.text.trim().toUpperCase())
           .eq('is_active', true)
           .single();
-      await _persistRoom(
-          data as Map<String, dynamic>, _joinAuthorController.text.trim());
+      await _persistRoom(data, _joinAuthorController.text.trim());
       if (mounted) context.go('/home');
     } catch (e) {
       if (mounted) {
