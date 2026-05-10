@@ -1,0 +1,15 @@
+{
+  "name": "brain-overflow-backend-v2",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "reset": "node scripts/reset.mjs",
+    "seed": "node scripts/seed.mjs",
+    "verify": "node scripts/verify.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}

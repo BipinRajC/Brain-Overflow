@@ -1,0 +1,8 @@
+.opencode/
+.swarm/
+
+
+node_modules/
+.env
+config.toml
+.temp/

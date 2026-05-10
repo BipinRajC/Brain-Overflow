@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brain Overflow Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+  <!-- Fullscreen Initial Config Modal -->
+  <div id="config-overlay" class="glass-overlay" style="display: none;">
+    <div class="config-modal glass-card">
+      <div class="brand">
+        <div class="logo-circle"></div>
+        <h2>Brain Overflow</h2>
+      </div>
+      <p class="subtitle">Enter your Supabase credentials to connect.</p>
+      <div class="form-group">
+        <label>Supabase URL</label>
+        <input id="cfg-url" type="text" placeholder="https://xyz.supabase.co" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="form-group">
+        <label>Publishable Key</label>
+        <input id="cfg-key" type="password" placeholder="sb_publishable_..." autocomplete="off" spellcheck="false" />
+      </div>
+      <button class="btn primary" onclick="saveConfig()">Connect</button>
+      <span id="cfg-error" class="error-msg"></span>
+    </div>
+  </div>
+
+  <div id="app-container" style="display: none;">
+    <!-- Sidebar (Rooms) -->
+    <aside class="sidebar glass-panel">
+      <div class="sidebar-header">
+        <div class="brand-small">
+          <div class="logo-circle small"></div>
+          <h3>Brain Overflow</h3>
+        </div>
+        <button class="btn icon-btn" onclick="logout()" title="Disconnect">🔌</button>
+      </div>
+
+      <div class="rooms-header">
+        <h4>YOUR WORKSPACES</h4>
+        <button class="btn small outline" onclick="showNewRoomInput()">+ New</button>
+      </div>
+
+      <div id="new-room-container" class="new-room-input" style="display:none;">
+        <input id="new-room-name" type="text" placeholder="Room name..." onkeydown="if(event.key==='Enter') createRoom()" />
+      </div>
+
+      <div id="rooms-list" class="nav-list">
+        <!-- Room items injected here -->
+      </div>
+    </aside>
+
+    <!-- Main Content (Feed) -->
+    <main class="main-content">
+      <div id="empty-state" class="empty-state">
+        <div class="icon">✨</div>
+        <h2>Select or create a workspace</h2>
+        <p>Your ideas will be processed and refined here.</p>
+      </div>
+
+      <div id="room-view" class="room-view" style="display: none;">
+        <header class="room-header glass-panel">
+          <div class="room-title-area">
+            <h1 id="current-room-name">Workspace</h1>
+            <span class="status-badge live">Live</span>
+          </div>
+          <div class="room-actions">
+            <select id="model-select" class="dropdown" onchange="updateRoomModel()"></select>
+            <button class="btn outline" onclick="togglePromptsPanel()">⚙️ Pipeline Config</button>
+            <button class="btn danger outline" onclick="deleteCurrentRoom()">Trash</button>
+          </div>
+        </header>
+
+        <!-- Prompts Config Panel (Collapsible) -->
+        <div id="prompts-panel" class="prompts-panel glass-card" style="display: none;">
+          <div class="panel-header">
+            <h3>AI Processing Pipeline</h3>
+            <button class="btn small" onclick="addPromptRow()">+ Add Step</button>
+          </div>
+          <p class="help-text">Define the chain of prompts. Each step runs sequentially.</p>
+          <div id="prompt-list" class="prompt-list"></div>
+          <div class="panel-footer">
+            <button class="btn primary small" onclick="savePrompts()">Save Pipeline</button>
+          </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area glass-card">
+          <div class="author-row">
+            <input id="idea-author" type="text" placeholder="Your Name" value="Guest" class="transparent-input" />
+          </div>
+          <textarea id="idea-input" placeholder="What's your idea? Describe it here..." rows="3"></textarea>
+          <div class="input-actions">
+            <button class="btn primary" onclick="submitIdea()">Process Idea ✨</button>
+          </div>
+        </div>
+
+        <!-- Ideas Feed -->
+        <div class="feed-header">
+          <h3>Recent Ideas</h3>
+        </div>
+        <div id="ideas-feed" class="ideas-feed">
+          <!-- Ideas injected here -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Side Panel (Idea Details & Chat) -->
+    <aside id="idea-panel" class="idea-panel glass-panel">
+      <div class="panel-close">
+        <button class="btn icon-btn" onclick="closeIdeaPanel()">✕</button>
+      </div>
+      
+      <div id="idea-panel-content" class="idea-panel-scroll">
+        <!-- Populated via JS -->
+      </div>
+    </aside>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
