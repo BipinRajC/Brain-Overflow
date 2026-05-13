@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Plus, PencilSimple, Trash, Check, X, ChatText } from '@phosphor-icons/react'
 import { getSupabase } from '../lib/supabase.js'
 
 const BLANK = { prompt_name: '', prompt: '', multi_turn: false }
 
 export default function PromptsPage() {
   const [prompts, setPrompts] = useState([])
-  const [form,    setForm]    = useState(null) // null = closed, {} = new, {id,...} = editing
-  const [err,     setErr]     = useState('')
-  const [busy,    setBusy]    = useState(false)
+  const [form, setForm] = useState(null)
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
 
   useEffect(() => { fetchPrompts() }, [])
 
@@ -19,15 +21,22 @@ export default function PromptsPage() {
   }
 
   async function save() {
-    if (!form.prompt_name.trim() || !form.prompt.trim()) { setErr('Name and prompt text are required'); return }
+    if (!form.prompt_name.trim() || !form.prompt.trim()) {
+      setErr('Name and prompt text are required')
+      return
+    }
     setBusy(true)
     setErr('')
     const sb = getSupabase()
     if (form.id) {
-      const { error } = await sb.from('prompts').update({ prompt_name: form.prompt_name, prompt: form.prompt, multi_turn: form.multi_turn }).eq('id', form.id)
+      const { error } = await sb.from('prompts').update({
+        prompt_name: form.prompt_name, prompt: form.prompt, multi_turn: form.multi_turn
+      }).eq('id', form.id)
       if (error) { setErr(error.message); setBusy(false); return }
     } else {
-      const { error } = await sb.from('prompts').insert({ prompt_name: form.prompt_name, prompt: form.prompt, multi_turn: form.multi_turn })
+      const { error } = await sb.from('prompts').insert({
+        prompt_name: form.prompt_name, prompt: form.prompt, multi_turn: form.multi_turn
+      })
       if (error) { setErr(error.message); setBusy(false); return }
     }
     setForm(null)
@@ -44,76 +53,177 @@ export default function PromptsPage() {
   }
 
   return (
-    <div className="page">
-      <div className="toolbar">
-        <h1 className="page-title" style={{ marginBottom: 0 }}>Prompts</h1>
-        <button className="btn btn-primary" onClick={() => { setForm(BLANK); setErr('') }}>+ New Prompt</button>
-      </div>
-
-      {err && <div style={{ color: 'var(--red)', marginBottom: 16 }}>{err}</div>}
-
-      {form && (
-        <div className="card" style={{ marginBottom: 24 }}>
-          <h3 style={{ marginBottom: 16 }}>{form.id ? 'Edit Prompt' : 'New Prompt'}</h3>
-          <div className="form-group">
-            <label className="form-label">Prompt Name</label>
-            <input
-              value={form.prompt_name}
-              onChange={e => setForm(f => ({ ...f, prompt_name: e.target.value }))}
-              placeholder="e.g. Categorize & Score"
-            />
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="min-h-[100dvh] pt-24 px-4 md:px-8 pb-12"
+    >
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <ChatText className="w-6 h-6 text-[#00d4ff]" />
+            <h1 className="text-3xl font-bold tracking-tight">Prompts</h1>
           </div>
-          <div className="form-group">
-            <label className="form-label">Prompt Text</label>
-            <textarea
-              style={{ minHeight: 180 }}
-              value={form.prompt}
-              onChange={e => setForm(f => ({ ...f, prompt: e.target.value }))}
-              placeholder="You are an expert evaluator. Analyze the following idea and provide a detailed assessment..."
-            />
-          </div>
-          <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <label className="form-label" style={{ marginBottom: 0 }}>Multi-Turn Context</label>
-            <input
-              type="checkbox"
-              checked={form.multi_turn || false}
-              onChange={e => setForm(f => ({ ...f, multi_turn: e.target.checked }))}
-              style={{ width: 16, height: 16, cursor: 'pointer' }}
-            />
-            <span style={{ fontSize: 13, color: 'var(--muted)' }}>
-              {form.multi_turn ? 'Sends all prior prompts and responses.' : 'Single response: sends only the previous response.'}
-            </span>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-primary" onClick={save} disabled={busy}>{busy ? 'Saving...' : 'Save'}</button>
-            <button className="btn" onClick={() => { setForm(null); setErr('') }}>Cancel</button>
-          </div>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => { setForm(BLANK); setErr('') }}
+            className="flex items-center gap-2 px-4 py-2 rounded-full liquid-glass text-sm hover:border-[rgba(0,212,255,0.2)] transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            New Prompt
+          </motion.button>
         </div>
-      )}
 
-      {prompts.length === 0 && !form && (
-        <div className="empty">No prompts yet. Create your first prompt to get started.</div>
-      )}
+        {/* Error */}
+        <AnimatePresence>
+          {err && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center gap-2 mb-6 p-4 rounded-xl bg-status-red text-[#ff4757] text-sm"
+            >
+              <X className="w-4 h-4" />
+              {err}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {prompts.map(p => (
-        <div key={p.id} className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-            <div>
-              <div style={{ fontWeight: 600, marginBottom: 4 }}>{p.prompt_name}</div>
-              <div style={{ fontSize: 11, color: 'var(--muted)' }}>
-                ID: {p.id} &bull; Mode: {p.multi_turn ? 'Multi-turn' : 'Single response'}
+        {/* Form */}
+        <AnimatePresence>
+          {form && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="liquid-glass rounded-2xl p-6 mb-8"
+            >
+              <h2 className="text-lg font-semibold mb-6">{form.id ? 'Edit Prompt' : 'New Prompt'}</h2>
+
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="text-xs font-mono uppercase tracking-wider mb-2 block" style={{ color: 'var(--color-text-muted)' }}>
+                    Prompt Name
+                  </label>
+                  <input
+                    value={form.prompt_name}
+                    onChange={e => setForm(f => ({ ...f, prompt_name: e.target.value }))}
+                    placeholder="e.g. Categorize & Score"
+                    className="w-full bg-[rgba(255,255,255,0.03)] border border-[var(--color-border-subtle)] rounded-xl px-4 py-3 text-sm focus:border-[#00d4ff] outline-none transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-mono uppercase tracking-wider mb-2 block" style={{ color: 'var(--color-text-muted)' }}>
+                    Prompt Text
+                  </label>
+                  <textarea
+                    value={form.prompt}
+                    onChange={e => setForm(f => ({ ...f, prompt: e.target.value }))}
+                    placeholder="You are an expert evaluator. Analyze the following idea and provide a detailed assessment..."
+                    rows={6}
+                    className="w-full bg-[rgba(255,255,255,0.03)] border border-[var(--color-border-subtle)] rounded-xl px-4 py-3 text-sm focus:border-[#00d4ff] outline-none transition-colors resize-y"
+                  />
+                </div>
+
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                    form.multi_turn ? 'bg-[#00d4ff] border-[#00d4ff]' : 'border-[var(--color-border-subtle)]'
+                  }`}>
+                    {form.multi_turn && <Check className="w-3 h-3 text-[#050811]" weight="bold" />}
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={form.multi_turn || false}
+                    onChange={e => setForm(f => ({ ...f, multi_turn: e.target.checked }))}
+                    className="hidden"
+                  />
+                  <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                    {form.multi_turn ? 'Multi-turn: sends all prior prompts and responses' : 'Single response: sends only the previous response'}
+                  </span>
+                </label>
               </div>
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn btn-sm" onClick={() => { setForm({ ...p }); setErr('') }}>Edit</button>
-              <button className="btn btn-sm btn-danger" onClick={() => del(p.id)}>Delete</button>
-            </div>
+
+              <div className="flex gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={save}
+                  disabled={busy}
+                  className="px-6 py-2 rounded-xl bg-[rgba(0,212,255,0.15)] border border-[rgba(0,212,255,0.3)] text-[#00d4ff] text-sm font-medium hover:bg-[rgba(0,212,255,0.25)] disabled:opacity-50 transition-colors"
+                >
+                  {busy ? 'Saving...' : 'Save'}
+                </motion.button>
+                <button
+                  onClick={() => { setForm(null); setErr('') }}
+                  className="px-6 py-2 rounded-xl text-sm hover:bg-[rgba(255,255,255,0.03)] transition-colors"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* List */}
+        {prompts.length === 0 && !form && (
+          <div className="text-center py-20">
+            <ChatText className="w-16 h-16 mx-auto mb-4 text-[var(--color-text-dim)]" />
+            <p className="text-lg mb-2">No prompts yet</p>
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+              Create your first prompt to get started
+            </p>
           </div>
-          <div style={{ fontSize: 13, color: 'var(--muted)', whiteSpace: 'pre-wrap', maxHeight: 120, overflow: 'hidden' }}>
-            {p.prompt}
-          </div>
+        )}
+
+        <div className="space-y-3">
+          <AnimatePresence>
+            {prompts.map((p, index) => (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ delay: index * 0.05 }}
+                className="liquid-glass rounded-xl p-5 group"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="font-semibold mb-1">{p.prompt_name}</h3>
+                    <div className="flex items-center gap-2 text-xs font-mono" style={{ color: 'var(--color-text-dim)' }}>
+                      <span className={`px-2 py-0.5 rounded ${p.multi_turn ? 'bg-[rgba(0,212,255,0.1)] text-[#00d4ff]' : 'bg-[rgba(90,106,125,0.15)] text-[var(--color-text-muted)]'}`}>
+                        {p.multi_turn ? 'Multi-turn' : 'Single response'}
+                      </span>
+                      <span>ID: {p.id.slice(0, 8)}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => { setForm({ ...p }); setErr('') }}
+                      className="p-2 rounded-lg hover:bg-[rgba(0,212,255,0.1)] text-[#00d4ff] transition-colors"
+                    >
+                      <PencilSimple className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => del(p.id)}
+                      className="p-2 rounded-lg hover:bg-status-red hover:text-[#ff4757] transition-colors"
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                <p className="text-sm line-clamp-3" style={{ color: 'var(--color-text-muted)' }}>
+                  {p.prompt}
+                </p>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
-      ))}
-    </div>
+      </div>
+    </motion.div>
   )
 }
