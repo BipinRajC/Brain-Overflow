@@ -582,6 +582,49 @@ export const COMMANDS = {
       setTimeout(() => window.location.reload(), 500)
       return ['REBOOTING...', '']
     }
+  },
+  
+  // Hidden commands (not shown in help)
+  hello: {
+    description: 'Hidden',
+    handler: () => [
+      '...',
+      'THE MACHINE REMEMBERS YOU.',
+      'IT HAS BEEN WAITING.',
+      '...',
+      ''
+    ]
+  },
+  
+  sudo: {
+    description: 'Hidden',
+    handler: () => [
+      'ERROR: ELEVATED PRIVILEGES NOT AVAILABLE.',
+      'THIS SYSTEM OPERATES IN READ-ONLY MODE.',
+      'ATTEMPT LOGGED.',
+      ''
+    ]
+  },
+  
+  credits: {
+    description: 'Hidden',
+    handler: () => [
+      'BRAIN OVERFLOW v0.7.3-alpha-recovered',
+      '',
+      'AN ABANDONED OPERATING SYSTEM',
+      'FOR THINKERS AND DREAMERS.',
+      '',
+      'RECOVERED FROM SECTOR 7G',
+      'COGNITION SYSTEMS INC. (1987-2026)',
+      '',
+      '"An idea that is not dangerous is',
+      'unworthy of being called an idea at all."',
+      '    — Oscar Wilde',
+      '',
+      'SYSTEM STATUS: OPERATIONAL',
+      'LAST MAINTENANCE: 1987-03-15',
+      ''
+    ]
   }
 }
 
