@@ -65,6 +65,20 @@ export default function Terminal() {
   }, [input, isProcessing, execute])
   
   const handleKeyDown = useCallback((e) => {
+    // Ctrl+L to clear
+    if (e.ctrlKey && e.key === 'l') {
+      e.preventDefault()
+      setLines([])
+      return
+    }
+    
+    // Escape to cancel recorder
+    if (e.key === 'Escape' && showRecorder) {
+      e.preventDefault()
+      handleRecorderCancel()
+      return
+    }
+    
     if (e.key === 'ArrowUp') {
       e.preventDefault()
       if (history.length > 0) {
@@ -86,13 +100,13 @@ export default function Terminal() {
       e.preventDefault()
       // Simple tab completion
       const partial = input.toLowerCase()
-      const commands = ['help', 'setup', 'record', 'ideas', 'idea', 'flows', 'prompts', 'models', 'settings', 'clear', 'theme', 'reboot']
+      const commands = ['help', 'setup', 'record', 'ideas', 'idea', 'flows', 'prompts', 'models', 'settings', 'clear', 'theme', 'reboot', 'status', 'time']
       const matches = commands.filter(cmd => cmd.startsWith(partial))
       if (matches.length === 1) {
         setInput(matches[0] + ' ')
       }
     }
-  }, [input, history, historyIndex])
+  }, [input, history, historyIndex, showRecorder, handleRecorderCancel])
   
   const handleRecorderComplete = useCallback((ideaId) => {
     setShowRecorder(false)
@@ -141,6 +155,8 @@ export default function Terminal() {
         'TYPE "help" FOR AVAILABLE COMMANDS.',
         'TYPE "record" TO CAPTURE AN IDEA (VOICE OR TEXT).',
         'TYPE "setup <url> <key>" TO CONFIGURE SUPABASE.',
+        '',
+        'SHORTCUTS: CTRL+L = CLEAR  |  TAB = COMPLETE  |  ↑↓ = HISTORY',
         ''
       ]
       

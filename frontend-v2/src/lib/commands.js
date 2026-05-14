@@ -14,6 +14,7 @@ export const COMMANDS = {
       '  models            — List AI models',
       '  status            — System status and diagnostics',
       '  time              — Current system time',
+      '  delete [id]       — Delete an idea',
       '  settings          — System settings',
       '  help              — Show this help',
       '  clear             — Clear terminal',
@@ -467,6 +468,63 @@ export const COMMANDS = {
         '─'.repeat(40),
         ''
       ]
+    }
+  },
+  
+  delete: {
+    description: 'Delete an idea',
+    handler: async (args) => {
+      if (!isConfigured()) {
+        return ['ERROR: Supabase not configured. Run "setup" first.', '']
+      }
+      
+      if (!args[0]) {
+        return ['USAGE: delete <id>', 'EXAMPLE: delete a7f3d9e2', '']
+      }
+      
+      try {
+        const supabase = getSupabase()
+        const id = args[0]
+        
+        // Try exact match first, then partial
+        let { data: idea, error } = await supabase
+          .from('ideas')
+          .select('id')
+          .eq('id', id)
+          .single()
+        
+        if (error || !idea) {
+          // Try partial match
+          const { data: ideas } = await supabase
+            .from('ideas')
+            .select('id')
+            .ilike('id', `${id}%`)
+            .limit(1)
+          
+          idea = ideas?.[0]
+        }
+        
+        if (!idea) {
+          return ['ERROR: Idea not found.', '']
+        }
+        
+        // Delete related messages first
+        await supabase.from('chat_messages').delete().eq('idea_id', idea.id)
+        
+        // Delete idea
+        const { error: deleteError } = await supabase.from('ideas').delete().eq('id', idea.id)
+        
+        if (deleteError) throw deleteError
+        
+        return [
+          'TRANSMISSION DELETED.',
+          `ID: ${idea.id.slice(0, 8)}`,
+          'MEMORY FRAGMENT PURGED.',
+          ''
+        ]
+      } catch (err) {
+        return [`ERROR: ${err.message}`, '']
+      }
     }
   },
   
