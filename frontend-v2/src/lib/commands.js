@@ -15,6 +15,7 @@ export const COMMANDS = {
       '  status            — System status and diagnostics',
       '  time              — Current system time',
       '  delete [id]       — Delete an idea',
+      '  search [query]    — Search ideas',
       '  settings          — System settings',
       '  help              — Show this help',
       '  clear             — Clear terminal',
@@ -516,6 +517,55 @@ export const COMMANDS = {
         'EXAMPLE: settings scanlines off',
         ''
       ]
+    }
+  },
+  
+  search: {
+    description: 'Search ideas',
+    handler: async (args) => {
+      if (!isConfigured()) {
+        return ['ERROR: Supabase not configured. Run "setup" first.', '']
+      }
+      
+      const query = args.join(' ')
+      
+      if (!query) {
+        return ['USAGE: search <query>', 'EXAMPLE: search platform', '']
+      }
+      
+      try {
+        const supabase = getSupabase()
+        const { data, error } = await supabase
+          .from('ideas')
+          .select('*')
+          .ilike('idea', `%${query}%`)
+          .order('created_at', { ascending: false })
+          .limit(20)
+        
+        if (error) throw error
+        
+        if (!data || data.length === 0) {
+          return ['NO MATCHES FOUND.', '']
+        }
+        
+        const lines = [
+          `SEARCH RESULTS: ${data.length}`,
+          `QUERY: "${query}"`,
+          '─'.repeat(60),
+          ...data.map(idea => {
+            const id = idea.id.slice(0, 8)
+            const status = idea.status.toUpperCase()
+            const text = idea.idea.slice(0, 50) + (idea.idea.length > 50 ? '...' : '')
+            return `[${id}] ${status.padEnd(12)} ${text}`
+          }),
+          '─'.repeat(60),
+          ''
+        ]
+        
+        return lines
+      } catch (err) {
+        return [`ERROR: ${err.message}`, '']
+      }
     }
   },
   
