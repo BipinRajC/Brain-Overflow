@@ -24,9 +24,9 @@ function renderMarkdown(text) {
 }
 
 const ROLE_CONFIG = {
-  user: { label: 'You', icon: User, color: '#e8ecf1', bg: 'bg-[rgba(255,255,255,0.03)]' },
-  assistant: { label: 'AI Advisor', icon: Robot, color: '#00d4ff', bg: 'bg-[rgba(0,212,255,0.05)]' },
-  system: { label: 'System', icon: Robot, color: '#5a6a7d', bg: 'bg-[rgba(90,106,125,0.05)]' },
+  idea: { label: 'You', icon: User, color: '#e8ecf1', bg: 'bg-[rgba(255,255,255,0.03)]' },
+  prompt: { label: 'System', icon: Robot, color: '#5a6a7d', bg: 'bg-[rgba(90,106,125,0.05)]' },
+  response: { label: 'AI Advisor', icon: Robot, color: '#00d4ff', bg: 'bg-[rgba(0,212,255,0.05)]' },
 }
 
 export default function IdeaChat({ ideaId, messages, idea, onUpdate }) {
@@ -34,7 +34,7 @@ export default function IdeaChat({ ideaId, messages, idea, onUpdate }) {
   const [sending, setSending] = useState(false)
   const messagesEndRef = useRef(null)
 
-  const displayedMessages = messages.filter(m => m.role !== 'system')
+  const displayedMessages = messages.filter(m => m.message_type !== 'prompt')
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -47,34 +47,26 @@ export default function IdeaChat({ ideaId, messages, idea, onUpdate }) {
     try {
       const supabase = getSupabase()
 
-      // Get next sequence number
-      const maxSeq = messages.length > 0
-        ? Math.max(...messages.map(m => m.sequence_number))
-        : 1
+      // Create a custom prompt to continue the conversation in "Full History JSON" mode
+      const { data: promptData, error: promptErr } = await supabase.from('prompts').insert({
+        prompt_name: 'Chat Follow-up',
+        prompt: reply.trim(),
+        context_mode: 'full_history_json'
+      }).select('id').single()
 
-      // Insert user reply
-      await supabase.from('chat_messages').insert({
-        idea_id: ideaId,
-        message: reply.trim(),
-        role: 'user',
-        sequence_number: maxSeq + 1,
-      })
+      if (promptErr) throw promptErr
 
       // Update idea status back to processing
       await supabase.from('ideas').update({ status: 'processing' }).eq('id', ideaId)
 
-      // Trigger next prompt processing
+      // Trigger custom prompt processing
       const url = localStorage.getItem('sb_url')
       const key = localStorage.getItem('sb_key')
-
-      // Find current prompt index based on message count
-      const promptMessages = messages.filter(m => m.role === 'system')
-      const nextPromptIndex = promptMessages.length
 
       await fetch(`${url}/functions/v1/process-prompt`, {
         method: 'POST',
         headers: { apikey: key, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idea_id: ideaId, prompt_index: nextPromptIndex }),
+        body: JSON.stringify({ idea_id: ideaId, custom_prompt_id: promptData.id }),
       })
 
       setReply('')
@@ -86,7 +78,7 @@ export default function IdeaChat({ ideaId, messages, idea, onUpdate }) {
     }
   }
 
-  const isCompleted = idea?.status === 'completed'
+  const isCompleted = false // We allow chatting forever
   const isProcessing = idea?.status === 'processing'
 
   return (
@@ -107,7 +99,7 @@ export default function IdeaChat({ ideaId, messages, idea, onUpdate }) {
           )}
 
           {displayedMessages.map((msg, index) => {
-            const config = ROLE_CONFIG[msg.role] || ROLE_CONFIG.user
+            const config = ROLE_CONFIG[msg.message_type] || ROLE_CONFIG.idea
             const Icon = config.icon
 
             return (
@@ -126,14 +118,14 @@ export default function IdeaChat({ ideaId, messages, idea, onUpdate }) {
                     <Icon className="w-4 h-4" style={{ color: config.color }} />
                   </div>
                   <span className="text-xs font-mono uppercase tracking-wider" style={{ color: config.color }}>
-                    {config.label}
+                    {msg.message_type === 'prompt' && msg.prompt_name ? `${config.label} (${msg.prompt_name})` : config.label}
                   </span>
                   <span className="text-xs font-mono ml-auto" style={{ color: 'var(--color-text-dim)' }}>
                     #{msg.sequence_number}
                   </span>
                 </div>
 
-                {msg.role === 'assistant' ? (
+                {msg.message_type === 'response' ? (
                   <div
                     className="text-sm leading-relaxed prose prose-invert prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.message) }}

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, PencilSimple, Trash, Check, X, ChatText } from '@phosphor-icons/react'
 import { getSupabase } from '../lib/supabase.js'
 
-const BLANK = { prompt_name: '', prompt: '', multi_turn: false }
+const BLANK = { prompt_name: '', prompt: '', context_mode: 'idea_only' }
 
 export default function PromptsPage() {
   const [prompts, setPrompts] = useState([])
@@ -30,12 +30,12 @@ export default function PromptsPage() {
     const sb = getSupabase()
     if (form.id) {
       const { error } = await sb.from('prompts').update({
-        prompt_name: form.prompt_name, prompt: form.prompt, multi_turn: form.multi_turn
+        prompt_name: form.prompt_name, prompt: form.prompt, context_mode: form.context_mode
       }).eq('id', form.id)
       if (error) { setErr(error.message); setBusy(false); return }
     } else {
       const { error } = await sb.from('prompts').insert({
-        prompt_name: form.prompt_name, prompt: form.prompt, multi_turn: form.multi_turn
+        prompt_name: form.prompt_name, prompt: form.prompt, context_mode: form.context_mode
       })
       if (error) { setErr(error.message); setBusy(false); return }
     }
@@ -129,22 +129,20 @@ export default function PromptsPage() {
                   />
                 </div>
 
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                    form.multi_turn ? 'bg-[#00d4ff] border-[#00d4ff]' : 'border-[var(--color-border-subtle)]'
-                  }`}>
-                    {form.multi_turn && <Check className="w-3 h-3 text-[#050811]" weight="bold" />}
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={form.multi_turn || false}
-                    onChange={e => setForm(f => ({ ...f, multi_turn: e.target.checked }))}
-                    className="hidden"
-                  />
-                  <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                    {form.multi_turn ? 'Multi-turn: sends all prior prompts and responses' : 'Single response: sends only the previous response'}
-                  </span>
-                </label>
+                <div>
+                  <label className="text-xs font-mono uppercase tracking-wider mb-2 block" style={{ color: 'var(--color-text-muted)' }}>
+                    Context Mode
+                  </label>
+                  <select
+                    value={form.context_mode || 'idea_only'}
+                    onChange={e => setForm(f => ({ ...f, context_mode: e.target.value }))}
+                    className="w-full bg-[rgba(255,255,255,0.03)] border border-[var(--color-border-subtle)] rounded-xl px-4 py-3 text-sm focus:border-[#00d4ff] outline-none transition-colors"
+                  >
+                    <option value="idea_only" style={{ background: '#0a0d16', color: '#e2e8f0' }}>Idea Only</option>
+                    <option value="previous_response" style={{ background: '#0a0d16', color: '#e2e8f0' }}>Previous Response</option>
+                    <option value="full_history_json" style={{ background: '#0a0d16', color: '#e2e8f0' }}>Full History JSON</option>
+                  </select>
+                </div>
               </div>
 
               <div className="flex gap-3">
@@ -195,9 +193,10 @@ export default function PromptsPage() {
                   <div>
                     <h3 className="font-semibold mb-1">{p.prompt_name}</h3>
                     <div className="flex items-center gap-2 text-xs font-mono" style={{ color: 'var(--color-text-dim)' }}>
-                      <span className={`px-2 py-0.5 rounded ${p.multi_turn ? 'bg-[rgba(0,212,255,0.1)] text-[#00d4ff]' : 'bg-[rgba(90,106,125,0.15)] text-[var(--color-text-muted)]'}`}>
-                        {p.multi_turn ? 'Multi-turn' : 'Single response'}
+                      <span className={`px-2 py-0.5 rounded bg-[rgba(0,212,255,0.1)] text-[#00d4ff]`}>
+                        {p.context_mode === 'idea_only' ? 'Idea Only' : p.context_mode === 'previous_response' ? 'Previous Response' : 'Full History JSON'}
                       </span>
+                      <span className="opacity-50">•</span>
                       <span>ID: {p.id.slice(0, 8)}</span>
                     </div>
                   </div>

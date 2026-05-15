@@ -86,7 +86,7 @@ function ScoreRing({ score }) {
 
 function Timeline({ messages, status }) {
   const steps = messages
-    .filter(m => m.role === 'system')
+    .filter(m => m.message_type === 'prompt')
     .map((m, i) => ({
       id: m.id,
       label: `Step ${i + 1}`,
