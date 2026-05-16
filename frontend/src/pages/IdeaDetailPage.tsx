@@ -5,6 +5,7 @@ import { useIdea } from '@/hooks/useIdea'
 import { ScoreRing } from '@/components/idea/ScoreRing'
 import { IdeaTimeline } from '@/components/idea/IdeaTimeline'
 import { IdeaChat } from '@/components/idea/IdeaChat'
+import { QuoteFooter } from '@/components/shell/QuoteFooter'
 import type { Idea } from '@/types'
 
 const STATUS_META: Record<Idea['status'], { label: string; tone: string }> = {
@@ -193,6 +194,7 @@ export function IdeaDetailPage() {
           />
         </div>
       </div>
+      <QuoteFooter />
     </motion.div>
   )
 }

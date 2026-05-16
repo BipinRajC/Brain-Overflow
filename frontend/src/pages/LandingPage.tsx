@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Send } from 'lucide-react'
 import { VoiceRecorder } from '@/components/recorder/VoiceRecorder'
 import { IdeaCard } from '@/components/idea/IdeaCard'
+import { QuoteFooter } from '@/components/shell/QuoteFooter'
 import { listRecentIdeas } from '@/lib/api/ideas'
 import type { Idea } from '@/types'
-
-const TELEGRAM_BOT = 'brain_overflow_bot'
-const TELEGRAM_URL = `https://t.me/${TELEGRAM_BOT}`
 
 export function LandingPage() {
   const [recent, setRecent] = useState<Idea[]>([])
@@ -18,34 +15,6 @@ export function LandingPage() {
 
   return (
     <div className="relative min-h-[100dvh] pt-20 pb-32 px-4 md:px-8">
-      {/* Telegram alert — inline on mobile, fixed top-right on md+ */}
-      <div className="md:fixed md:top-4 md:right-4 z-40 flex items-start gap-2 max-w-sm mb-6 md:mb-0">
-        <div
-          role="alert"
-          className="flex-1 border border-[color:var(--color-pivot)]/40 bg-[color:var(--color-deep)]/90 backdrop-blur-md p-3 md:p-4"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Send className="h-4 w-4 text-[color:var(--color-pivot)]" />
-            <span className="font-pixel text-[11px] md:text-[12px] tracking-[0.18em] uppercase text-[color:var(--color-pivot)]">
-              Record via Telegram
-            </span>
-          </div>
-          <p className="font-mono text-[11px] md:text-xs text-[color:var(--color-text-mute)] leading-relaxed mb-3">
-            Speak ideas to <span className="text-[color:var(--color-text)]">@{TELEGRAM_BOT}</span> — they appear here instantly. Use keyboard TTS to dictate.
-          </p>
-          <a
-            href={TELEGRAM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 font-pixel text-[10px] md:text-[11px] tracking-[0.18em] uppercase bg-[color:var(--color-pivot)] text-[color:var(--color-void)] px-3 md:px-4 py-1.5 md:py-2 hover:opacity-90 transition-opacity"
-          >
-            <Send className="h-3 w-3 md:h-3.5" />
-            Open Bot
-          </a>
-        </div>
-        <TelegramInstructionsPopover />
-      </div>
-
       <div className="mx-auto max-w-5xl flex flex-col items-center">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -89,6 +58,7 @@ export function LandingPage() {
           </motion.div>
         )}
       </div>
+      <QuoteFooter />
     </div>
   )
 }

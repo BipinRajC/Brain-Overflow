@@ -88,7 +88,7 @@ export function CircularNav() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.8, ease: [0.32, 0.72, 0, 1] }}
         onClick={toggleMenu}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-4 md:px-6 py-3 rounded-full border transition-all duration-300 hover:scale-105 group"
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 sm:gap-3 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-full border transition-all duration-300 hover:scale-105 group"
         style={{
           background: 'rgba(17, 20, 28, 0.85)',
           borderColor: 'rgba(220, 224, 230, 0.12)',
@@ -98,7 +98,7 @@ export function CircularNav() {
         aria-label="Open navigation menu"
       >
         <Menu
-          className="h-5 w-5 transition-colors duration-300"
+          className="h-4 w-4 sm:h-5 sm:w-5 transition-colors duration-300"
           style={{ color: 'rgba(228, 230, 235, 0.6)' }}
           strokeWidth={1.5}
         />

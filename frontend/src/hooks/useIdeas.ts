@@ -2,9 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { listIdeas } from '@/lib/api/ideas'
 import type { Idea } from '@/types'
 
+let cachedIdeas: Idea[] = []
+
 export function useIdeas() {
-  const [ideas, setIdeas] = useState<Idea[]>([])
-  const [loading, setLoading] = useState(true)
+  const [ideas, setIdeas] = useState<Idea[]>(cachedIdeas)
+  const [loading, setLoading] = useState(cachedIdeas.length === 0)
   const [error, setError] = useState<string>('')
   const mountedRef = useRef(true)
 
@@ -12,6 +14,7 @@ export function useIdeas() {
     try {
       const rows = await listIdeas()
       if (!mountedRef.current) return
+      cachedIdeas = rows
       setIdeas(rows)
       setError('')
     } catch (e) {

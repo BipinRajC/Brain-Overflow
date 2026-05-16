@@ -29,7 +29,7 @@ export function QuoteFooter() {
   }, [done])
 
   return (
-    <div className="fixed bottom-20 md:bottom-6 left-4 md:left-6 z-20 max-w-[280px] md:max-w-[440px] pointer-events-none">
+    <div className="mt-8 md:mt-0 md:fixed md:bottom-6 md:left-6 px-4 md:px-0 z-20 max-w-[280px] md:max-w-[440px] pointer-events-none">
       <AnimatePresence mode="wait">
         <motion.div
           key={idx}

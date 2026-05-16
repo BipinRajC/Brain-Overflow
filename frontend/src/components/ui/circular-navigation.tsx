@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
@@ -15,23 +15,36 @@ interface CircularNavigationProps {
   toggleMenu: () => void;
 }
 
-function useNavDimensions() {
-  return useMemo(() => {
-    if (typeof window === "undefined") {
-      return { size: 600, radius: 220, itemSize: 96, centerSize: 72, iconSize: 26, labelSize: 10 };
-    }
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const minDim = Math.min(vw, vh);
-
-    if (minDim < 420) {
-      return { size: 320, radius: 110, itemSize: 64, centerSize: 52, iconSize: 20, labelSize: 8 };
-    }
-    if (minDim < 600) {
-      return { size: 440, radius: 155, itemSize: 76, centerSize: 60, iconSize: 22, labelSize: 9 };
-    }
+function getNavDimensions() {
+  if (typeof window === "undefined") {
     return { size: 600, radius: 220, itemSize: 96, centerSize: 72, iconSize: 26, labelSize: 10 };
+  }
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const minDim = Math.min(vw, vh);
+
+  if (minDim < 380) {
+    return { size: 280, radius: 90, itemSize: 52, centerSize: 44, iconSize: 16, labelSize: 7 };
+  }
+  if (minDim < 480) {
+    return { size: 340, radius: 115, itemSize: 64, centerSize: 52, iconSize: 20, labelSize: 8 };
+  }
+  if (minDim < 600) {
+    return { size: 440, radius: 155, itemSize: 76, centerSize: 60, iconSize: 22, labelSize: 9 };
+  }
+  return { size: 600, radius: 220, itemSize: 96, centerSize: 72, iconSize: 26, labelSize: 10 };
+}
+
+function useNavDimensions() {
+  const [dims, setDims] = useState(getNavDimensions);
+
+  useEffect(() => {
+    const onResize = () => setDims(getNavDimensions());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  return dims;
 }
 
 export function CircularNavigation({
