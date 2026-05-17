@@ -168,9 +168,9 @@ export function IdeaDetailPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.24 }}
-      className="relative min-h-[100dvh] pt-20 pb-32 px-4 md:px-8"
+      className="relative min-h-[100dvh] pt-20 pb-32 px-4 md:px-10 xl:px-16"
     >
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-screen-2xl">
         <Link
           to="/ideas"
           className="inline-flex items-center gap-2 font-mono text-xs text-[color:var(--color-text-mute)] hover:text-[color:var(--color-text)] mb-6 transition-colors"
@@ -178,11 +178,11 @@ export function IdeaDetailPage() {
           <ArrowLeft className="h-3.5 w-3.5" /> back to ideas
         </Link>
 
-        {/* Header */}
-        <div className="border border-[color:var(--color-edge)] bg-[color:var(--color-surface)]/40 backdrop-blur p-6 md:p-8 mb-6">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+        {/* Full-width header — idea text needs all the horizontal space it can get */}
+        <div className="border border-[color:var(--color-edge)] bg-[color:var(--color-surface)]/40 backdrop-blur p-6 md:p-8 mb-8">
+          <div className="flex items-start justify-between gap-6">
             <div className="flex-1 min-w-0">
-              <h1 className="font-mono text-lg md:text-xl leading-relaxed text-[color:var(--color-text)] mb-4">
+              <h1 className="font-mono text-base md:text-lg leading-relaxed text-[color:var(--color-text)] mb-4">
                 {idea.idea}
               </h1>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -200,7 +200,7 @@ export function IdeaDetailPage() {
                 </div>
                 {idea.category && (
                   <span className="font-pixel text-[10px] tracking-[0.2em] uppercase text-[color:var(--color-text-mute)]">
-                    // {CATEGORY_LABELS[idea.category]}
+                    {CATEGORY_LABELS[idea.category]}
                   </span>
                 )}
                 <span className="font-mono text-[10px] text-[color:var(--color-text-dim)]">
@@ -212,51 +212,58 @@ export function IdeaDetailPage() {
           </div>
         </div>
 
-        {/* Timeline */}
-        <div className="mb-8">
-          <h2 className="font-pixel text-[11px] tracking-[0.2em] uppercase text-[color:var(--color-text-mute)] mb-3">
-            EXECUTION_TIMELINE
-          </h2>
-          <IdeaTimeline idea={idea} messages={messages} />
-        </div>
+        {/* Two-column: narrow left (timeline + runs) | wide right (chat) */}
+        <div className="flex gap-8 xl:gap-10 items-start">
 
-        {/* Chat with runs sidebar */}
-        <div className="flex gap-6">
-          <RunsSidebar
-            ideaId={idea.id}
-            runs={runsWithLegacy}
-            flows={flows}
-            selectedRunId={selectedRunId}
-            onRunSelect={handleRunSelect}
-            onRunCreated={(run) => {
-              setRuns(prev => {
-                const exists = prev.some(r => r.id === run.id)
-                if (exists) return prev.map(r => r.id === run.id ? run : r)
-                return [run, ...prev]
-              })
-            }}
-          />
+          {/* LEFT — fixed-width panel for timeline + runs */}
+          <div className="flex flex-col gap-6 w-64 shrink-0">
+            <div>
+              <h2 className="font-pixel text-[11px] tracking-[0.2em] uppercase text-[color:var(--color-text-mute)] mb-3">
+                EXECUTION_TIMELINE
+              </h2>
+              <IdeaTimeline idea={idea} messages={messages} />
+            </div>
 
+            <div>
+              <h2 className="font-pixel text-[11px] tracking-[0.2em] uppercase text-[color:var(--color-text-mute)] mb-3">
+                RUNS
+              </h2>
+              <RunsSidebar
+                ideaId={idea.id}
+                runs={runsWithLegacy}
+                flows={flows}
+                selectedRunId={selectedRunId}
+                onRunSelect={handleRunSelect}
+                onRunCreated={(run) => {
+                  setRuns(prev => {
+                    const exists = prev.some(r => r.id === run.id)
+                    if (exists) return prev.map(r => r.id === run.id ? run : r)
+                    return [run, ...prev]
+                  })
+                }}
+              />
+            </div>
+          </div>
+
+          {/* RIGHT — chat fills the remaining width */}
           <div className="flex-1 min-w-0">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2">
+            <div className="flex items-center justify-between mb-3 gap-2">
               <h2 className="font-pixel text-[11px] tracking-[0.2em] uppercase text-[color:var(--color-text-mute)]">
                 TRANSMISSIONS
               </h2>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
                     const visible = displayedMessages.filter((m) => m.message_type !== 'prompt')
-                    const text = visible
-                      .map((m) => {
-                        const role = m.message_type === 'response' ? 'AI' : 'YOU'
-                        return `${role}:\n${m.message}\n`
-                      })
-                      .join('\n')
+                    const text = visible.map((m) => {
+                      const role = m.message_type === 'response' ? 'AI' : 'YOU'
+                      return `${role}:\n${m.message}\n`
+                    }).join('\n')
                     navigator.clipboard.writeText(text)
                   }}
                   className="font-pixel text-[10px] tracking-[0.18em] uppercase text-[color:var(--color-text-mute)] hover:text-[color:var(--color-text)] border border-[color:var(--color-edge)] px-3 py-1 transition-colors"
                 >
-                  Copy All
+                  COPY ALL
                 </button>
                 <button
                   onClick={() => {
@@ -265,20 +272,16 @@ export function IdeaDetailPage() {
                       `# Brain Overflow — Chat Export`,
                       `**Idea**: ${idea.idea}`,
                       `**Date**: ${new Date().toLocaleString()}`,
-                      ``,
-                      `---`,
-                      ``,
+                      ``, `---`, ``,
                     ]
                     for (const msg of visible) {
-                      const role = msg.message_type === 'response' ? '**AI:**' : '**YOU:**'
-                      lines.push(role)
+                      lines.push(msg.message_type === 'response' ? '**AI:**' : '**YOU:**')
                       lines.push('')
                       lines.push(msg.message)
                       lines.push('')
                     }
-                    const md = lines.join('\n')
                     const slug = idea.idea.slice(0, 40).replace(/[^a-z0-9]/gi, '_').toLowerCase()
-                    const blob = new Blob([md], { type: 'text/markdown' })
+                    const blob = new Blob([lines.join('\n')], { type: 'text/markdown' })
                     const url = URL.createObjectURL(blob)
                     const a = document.createElement('a')
                     a.href = url
@@ -290,13 +293,13 @@ export function IdeaDetailPage() {
                   }}
                   className="font-pixel text-[10px] tracking-[0.18em] uppercase text-[color:var(--color-text-mute)] hover:text-[color:var(--color-text)] border border-[color:var(--color-edge)] px-3 py-1 transition-colors"
                 >
-                  Export .md
+                  EXPORT .MD
                 </button>
                 <button
                   onClick={() => window.print()}
                   className="font-pixel text-[10px] tracking-[0.18em] uppercase text-[color:var(--color-text-mute)] hover:text-[color:var(--color-text)] border border-[color:var(--color-edge)] px-3 py-1 transition-colors"
                 >
-                  Export PDF
+                  EXPORT PDF
                 </button>
               </div>
             </div>
