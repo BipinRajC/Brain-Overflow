@@ -57,8 +57,8 @@ let allPassed = true
     console.error('✗ Prompts use_system_format column:', error.message)
     allPassed = false
   } else {
-    const allHave = data.every(row => 'use_system_format' in row)
-    console.log(`✓ Prompts have use_system_format: ${allHave}`)
+    const allHave = data.length > 0 && data.every(row => row.use_system_format !== null && row.use_system_format !== undefined)
+    console.log(`✓ Prompts have use_system_format: ${allHave} (${data.length} prompts checked)`)
     if (!allHave) allPassed = false
   }
 }
@@ -82,13 +82,10 @@ let allPassed = true
 
 // ── 4. chat_messages has reasoning_content and tokens_used columns ──────────
 {
-  const { data, error } = await sb.from('chat_messages').select('reasoning_content, tokens_used').limit(1)
-  if (error) {
-    console.error('✗ chat_messages new columns:', error.message)
-    allPassed = false
-  } else {
-    console.log('✓ Chat messages have new columns: true')
-  }
+  const { data: msgsData, error: msgsError } = await sb.from('chat_messages').select('reasoning_content, tokens_used').limit(1)
+  const colsExist = !msgsError
+  console.log(`✓ Chat messages have new columns: ${colsExist}`)
+  if (!colsExist) { allPassed = false; console.error('  Error:', msgsError.message) }
 }
 
 // ── 5. Sample model profile ─────────────────────────────────────────────────
