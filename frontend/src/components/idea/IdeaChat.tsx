@@ -91,6 +91,7 @@ export function IdeaChat({ ideaId, idea, messages, onUpdate }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const visible = messages.filter((m) => m.message_type !== 'prompt')
   const isProcessing = idea.status === 'processing'
+  const [showReasoning, setShowReasoning] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     ref.current?.scrollIntoView({ behavior: 'smooth' })
@@ -162,6 +163,34 @@ export function IdeaChat({ ideaId, idea, messages, onUpdate }: Props) {
                 <p className="font-mono text-sm whitespace-pre-wrap leading-relaxed">
                   {msg.message}
                 </p>
+              )}
+              {msg.message_type === 'response' && msg.reasoning_content && (
+                <div className="mt-2">
+                  <button
+                    onClick={() => setShowReasoning({ ...showReasoning, [msg.id]: !showReasoning[msg.id] })}
+                    className="text-xs text-[color:var(--color-text-mute)] hover:text-[color:var(--color-text)] underline"
+                  >
+                    {showReasoning[msg.id] ? 'Hide reasoning' : 'Show reasoning'}
+                  </button>
+
+                  {showReasoning[msg.id] && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="mt-2 p-3 bg-[color:var(--color-surface)]/40 border border-[color:var(--color-edge)]/30"
+                    >
+                      <p className="text-xs text-[color:var(--color-text-mute)] mb-1">Model reasoning:</p>
+                      <div className="text-sm text-[color:var(--color-text-dim)] opacity-60 italic whitespace-pre-wrap">
+                        {msg.reasoning_content}
+                      </div>
+                      {msg.tokens_used && (
+                        <p className="text-xs text-[color:var(--color-text-mute)] mt-2">
+                          Tokens used: {msg.tokens_used}
+                        </p>
+                      )}
+                    </motion.div>
+                  )}
+                </div>
               )}
             </motion.div>
           )
