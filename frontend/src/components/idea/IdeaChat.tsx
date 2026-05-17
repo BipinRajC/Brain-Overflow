@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkBreaks from 'remark-breaks'
@@ -167,29 +167,34 @@ export function IdeaChat({ ideaId, idea, messages, onUpdate }: Props) {
               {msg.message_type === 'response' && msg.reasoning_content && (
                 <div className="mt-2">
                   <button
-                    onClick={() => setShowReasoning({ ...showReasoning, [msg.id]: !showReasoning[msg.id] })}
+                    onClick={() => setShowReasoning((prev) => ({ ...prev, [msg.id]: !prev[msg.id] }))}
                     className="text-xs text-[color:var(--color-text-mute)] hover:text-[color:var(--color-text)] underline"
                   >
                     {showReasoning[msg.id] ? 'Hide reasoning' : 'Show reasoning'}
                   </button>
 
-                  {showReasoning[msg.id] && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="mt-2 p-3 bg-[color:var(--color-surface)]/40 border border-[color:var(--color-edge)]/30"
-                    >
-                      <p className="text-xs text-[color:var(--color-text-mute)] mb-1">Model reasoning:</p>
-                      <div className="text-sm text-[color:var(--color-text-dim)] opacity-60 italic whitespace-pre-wrap">
-                        {msg.reasoning_content}
-                      </div>
-                      {msg.tokens_used && (
-                        <p className="text-xs text-[color:var(--color-text-mute)] mt-2">
-                          Tokens used: {msg.tokens_used}
-                        </p>
-                      )}
-                    </motion.div>
-                  )}
+                  <AnimatePresence>
+                    {showReasoning[msg.id] && (
+                      <motion.div
+                        key={`reasoning-${msg.id}`}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        style={{ overflow: 'hidden' }}
+                        className="mt-2 p-3 bg-[color:var(--color-surface)]/40 border border-[color:var(--color-edge)]/30"
+                      >
+                        <p className="text-xs text-[color:var(--color-text-mute)] mb-1">Model reasoning:</p>
+                        <div className="max-h-48 overflow-y-auto text-sm text-[color:var(--color-text-dim)] opacity-60 italic whitespace-pre-wrap">
+                          {msg.reasoning_content}
+                        </div>
+                        {msg.tokens_used && (
+                          <p className="text-xs text-[color:var(--color-text-mute)] mt-2">
+                            Response tokens: {msg.tokens_used}
+                          </p>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               )}
             </motion.div>
