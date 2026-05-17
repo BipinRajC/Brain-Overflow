@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -33,7 +33,7 @@ function statusColor(status: IdeaRun['status']): string {
 function RunStatusIndicator({ status }: { status: IdeaRun['status'] }) {
   if (status === 'processing') {
     return (
-      <span className="inline-block h-2 w-2 rounded-full bg-[color:var(--color-edge-glow)] animate-spin border border-[color:var(--color-edge-glow)]" />
+      <span className="inline-block h-2 w-2 rounded-full border border-[color:var(--color-edge-glow)] border-t-transparent animate-spin" />
     )
   }
   if (status === 'queued') {
@@ -66,6 +66,13 @@ export function RunsSidebar({
   const [selectedFlowId, setSelectedFlowId] = useState<string>(flows[0]?.id ?? '')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
+
+  // Sync selectedFlowId when flows load asynchronously (useState initializer only runs once)
+  useEffect(() => {
+    if (selectedFlowId === '' && flows.length > 0) {
+      setSelectedFlowId(flows[0].id)
+    }
+  }, [flows, selectedFlowId])
 
   async function handleStartRun() {
     if (!selectedFlowId) return
@@ -112,7 +119,7 @@ export function RunsSidebar({
           size="sm"
           variant="outline"
           className="w-full font-pixel text-[10px] tracking-[0.15em]"
-          onClick={() => setShowFlowPicker(v => !v)}
+          onClick={() => { setShowFlowPicker(v => !v); setErr('') }}
           disabled={busy || flows.length === 0}
         >
           RUN WITH FLOW
