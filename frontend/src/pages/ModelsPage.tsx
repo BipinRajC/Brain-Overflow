@@ -29,7 +29,8 @@ import {
   setActiveModel,
   updateModel,
 } from '@/lib/api/models'
-import type { Model, Provider } from '@/types'
+import { getModelProfile, updateModelProfile, createModelProfile } from '@/lib/api/model-profiles'
+import type { Model, Provider, ModelProfile } from '@/types'
 
 interface FormState {
   id?: string
@@ -46,6 +47,8 @@ export function ModelsPage() {
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<string | null>(null)
+  const [configuringModel, setConfiguringModel] = useState<string | null>(null)
+  const [modelProfile, setModelProfile] = useState<Partial<ModelProfile>>({})
 
   async function fetchAll() {
     try {
@@ -112,6 +115,48 @@ export function ModelsPage() {
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Failed to delete')
       setPendingDelete(null)
+    }
+  }
+
+  async function loadAndConfigureModel(modelId: string) {
+    setBusy(true)
+    setErr('')
+    try {
+      const profile = await getModelProfile(modelId)
+      setModelProfile(profile ?? {
+        temperature: 0.3,
+        max_tokens: 8192,
+        reasoning_budget: 0,
+        timeout_ms: 60000,
+        max_retries: 2,
+        prompt_format: 'json_schema',
+        strip_reasoning: true,
+      })
+      setConfiguringModel(modelId)
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Failed to load profile')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function saveModelProfile() {
+    if (!configuringModel) return
+    setBusy(true)
+    setErr('')
+    try {
+      const existing = await getModelProfile(configuringModel)
+      if (existing) {
+        await updateModelProfile(configuringModel, modelProfile)
+      } else {
+        await createModelProfile(configuringModel, modelProfile)
+      }
+      setConfiguringModel(null)
+      setModelProfile({})
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Failed to save profile')
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -209,6 +254,116 @@ export function ModelsPage() {
           )}
         </AnimatePresence>
 
+        <AnimatePresence>
+          {configuringModel && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="mb-8 border border-[color:var(--color-edge-glow)] bg-[color:var(--color-surface)]/60 backdrop-blur p-6"
+            >
+              <h2 className="font-pixel text-base tracking-[0.2em] uppercase mb-5">
+                MODEL_CONFIG
+              </h2>
+
+              <div className="space-y-4">
+                <div>
+                  <Label>TEMPERATURE: {(modelProfile.temperature ?? 0.3).toFixed(1)}</Label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.1}
+                    value={modelProfile.temperature ?? 0.3}
+                    onChange={(e) => setModelProfile({ ...modelProfile, temperature: parseFloat(e.target.value) })}
+                    className="mt-2 w-full accent-[color:var(--color-edge-glow)]"
+                  />
+                </div>
+
+                <div>
+                  <Label>MAX TOKENS</Label>
+                  <Input
+                    type="number"
+                    value={modelProfile.max_tokens ?? 8192}
+                    onChange={(e) => setModelProfile({ ...modelProfile, max_tokens: parseInt(e.target.value) })}
+                    className="mt-2"
+                  />
+                </div>
+
+                <div>
+                  <Label>REASONING BUDGET</Label>
+                  <Input
+                    type="number"
+                    value={modelProfile.reasoning_budget ?? 0}
+                    onChange={(e) => setModelProfile({ ...modelProfile, reasoning_budget: parseInt(e.target.value) })}
+                    className="mt-2"
+                  />
+                  <p className="text-xs text-[color:var(--color-text-mute)] mt-1">
+                    Output budget: {(modelProfile.max_tokens ?? 8192) - (modelProfile.reasoning_budget ?? 0)} tokens
+                  </p>
+                </div>
+
+                <div>
+                  <Label>TIMEOUT (MS)</Label>
+                  <Input
+                    type="number"
+                    value={modelProfile.timeout_ms ?? 60000}
+                    onChange={(e) => setModelProfile({ ...modelProfile, timeout_ms: parseInt(e.target.value) })}
+                    className="mt-2"
+                  />
+                </div>
+
+                <div>
+                  <Label>MAX RETRIES</Label>
+                  <Input
+                    type="number"
+                    value={modelProfile.max_retries ?? 2}
+                    onChange={(e) => setModelProfile({ ...modelProfile, max_retries: parseInt(e.target.value) })}
+                    className="mt-2"
+                  />
+                </div>
+
+                <div>
+                  <Label>PROMPT FORMAT</Label>
+                  <Select
+                    value={modelProfile.prompt_format ?? 'json_schema'}
+                    onValueChange={(v) => setModelProfile({ ...modelProfile, prompt_format: v as ModelProfile['prompt_format'] })}
+                  >
+                    <SelectTrigger className="mt-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="json_schema">JSON Schema</SelectItem>
+                      <SelectItem value="xml_tags">XML Tags</SelectItem>
+                      <SelectItem value="markdown_sections">Markdown Sections</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="strip-reasoning"
+                    checked={modelProfile.strip_reasoning !== false}
+                    onChange={(e) => setModelProfile({ ...modelProfile, strip_reasoning: e.target.checked })}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="strip-reasoning" className="mb-0 cursor-pointer">Strip reasoning tokens</Label>
+                </div>
+              </div>
+
+              <div className="mt-6 flex gap-3">
+                <Button onClick={saveModelProfile} disabled={busy}>
+                  {busy ? 'SAVING…' : 'SAVE CONFIG'}
+                </Button>
+                <Button variant="ghost" onClick={() => { setConfiguringModel(null); setModelProfile({}) }}>
+                  CANCEL
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {models.length === 0 && !form ? (
           <div className="py-24 text-center font-mono text-sm text-[color:var(--color-text-mute)]">
             no models configured. add one to start processing.
@@ -257,6 +412,14 @@ export function ModelsPage() {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => loadAndConfigureModel(m.id)}
+                        disabled={busy}
+                      >
+                        CONFIGURE
+                      </Button>
                       {!m.is_active && (
                         <Button
                           size="sm"
