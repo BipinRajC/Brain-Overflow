@@ -144,7 +144,7 @@ TELEGRAM_ALLOWED_USERS=["123456789"]
 2. Send `/newbot`, pick a name (e.g. "My Brain Overflow") and a username ending in `bot`
 3. BotFather gives you the token — paste it in `.env`
 
-**Finding your Telegram user ID:** Send `/start` to [@userinfobot](https://t.me/userinfobot). It replies with your numeric ID. Put it in `TELEGRAM_ALLOWED_USERS`. For multiple users: `["123456789", "987654321"]`.
+**Finding your Telegram user ID:** Send `/start` to [@userinfobot](https://t.me/userinfobot). It replies with your numeric ID. Put it in `TELEGRAM_ALLOWED_USERS`. For multiple users: `["123456789","987654321"]`.
 
 **Getting an AI API key:**
 - **Fireworks AI** (recommended — fast, cheap): Sign up at [fireworks.ai](https://fireworks.ai), go to API Keys, create one. The default seed model (`llama-v3p1-70b-instruct`) runs on Fireworks.
