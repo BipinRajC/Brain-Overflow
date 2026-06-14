@@ -90,7 +90,7 @@ No backend server. No Docker. No Kubernetes. Supabase handles the database and e
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/karthik-pv/Brain-Overflow.git
+git clone https://github.com/BipinRajC/Brain-Overflow.git
 cd Brain-Overflow
 cd frontend && npm install && cd ..
 cd backend  && npm install && cd ..
