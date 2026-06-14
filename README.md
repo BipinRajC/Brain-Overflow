@@ -147,10 +147,10 @@ TELEGRAM_ALLOWED_USERS=["123456789"]
 **Finding your Telegram user ID:** Send `/start` to [@userinfobot](https://t.me/userinfobot). It replies with your numeric ID. Put it in `TELEGRAM_ALLOWED_USERS`. For multiple users: `["123456789","987654321"]`.
 
 **Getting an AI API key:**
-- **Fireworks AI** (recommended — fast, cheap): Sign up at [fireworks.ai](https://fireworks.ai), go to API Keys, create one. The default seed model (`llama-v3p1-70b-instruct`) runs on Fireworks.
+- **Groq** (recommended — free, no credit card required): Sign up at [groq.com](https://groq.com), go to API Keys, create one. The default seed model (`llama-3.3-70b-versatile`) runs on Groq and is completely free.
+- **Fireworks AI**: [fireworks.ai](https://fireworks.ai) — fast and cheap, requires credits
 - **OpenAI**: [platform.openai.com](https://platform.openai.com)
 - **Anthropic**: [console.anthropic.com](https://console.anthropic.com)
-- **Groq**: [groq.com](https://groq.com)
 
 You'll enter the key in the dashboard later (it gets encrypted and stored in your database via pgcrypto).
 
