@@ -64,8 +64,9 @@ export function extractResponse(text: string, format: string): ExtractionResult 
   return jsonResult
 }
 
+const VALID_JSON_ESCAPES = new Set(['"', '\\', '/', 'b', 'f', 'n', 'r', 't', 'u'])
+
 function sanitizeJsonString(text: string): string {
-  // Escape unescaped control characters inside JSON strings
   let result = ''
   let inString = false
   let escape = false
@@ -80,8 +81,13 @@ function sanitizeJsonString(text: string): string {
     }
 
     if (ch === '\\' && inString) {
-      escape = true
-      result += ch
+      const next = text[i + 1]
+      if (next !== undefined && !VALID_JSON_ESCAPES.has(next)) {
+        result += '\\\\'
+      } else {
+        escape = true
+        result += ch
+      }
       continue
     }
 
@@ -156,8 +162,13 @@ function extractBalancedJson(text: string): string | null {
     }
 
     if (ch === '\\' && inString) {
-      escape = true
-      parts.push(ch)
+      const next = text[i + 1]
+      if (next !== undefined && !VALID_JSON_ESCAPES.has(next)) {
+        parts.push('\\', '\\')
+      } else {
+        escape = true
+        parts.push(ch)
+      }
       continue
     }
 
