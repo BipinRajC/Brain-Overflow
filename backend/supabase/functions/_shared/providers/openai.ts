@@ -8,6 +8,7 @@ export async function generateCompletion(params: {
   maxTokens:   number
   apiKey:      string
 }): Promise<CompletionResult> {
+  const isNewModel = params.modelId.includes('gpt-5') || params.modelId.startsWith('o')
   const resp = await fetch('https://api.openai.com/v1/chat/completions', {
     method:  'POST',
     headers: {
@@ -17,8 +18,10 @@ export async function generateCompletion(params: {
     body: JSON.stringify({
       model:       params.modelId,
       messages:    params.messages,
-      temperature: params.temperature,
-      max_tokens:  params.maxTokens,
+      ...(isNewModel ? {} : { temperature: params.temperature }),
+      ...(isNewModel
+        ? { max_completion_tokens: params.maxTokens }
+        : { max_tokens: params.maxTokens }),
     }),
   })
   if (!resp.ok) throw new Error(`OpenAI error ${resp.status}: ${await resp.text()}`)

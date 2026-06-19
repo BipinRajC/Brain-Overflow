@@ -78,18 +78,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 
-    const trigger = fetch(`${supabaseUrl}/functions/v1/process-prompt`, {
+    fetch(`${supabaseUrl}/functions/v1/process-prompt`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ idea_id, prompt_index: 0, run_id, flow_id }),
-    }).then(r => {
-      if (!r.ok) r.text().then(t =>
-        logError(ctx, new Error(`process-prompt trigger failed: ${r.status} ${t}`))
-      )
-    }).catch(err => logError(ctx, err, 'process-prompt trigger threw'))
-
-    // @ts-ignore
-    if (typeof EdgeRuntime !== 'undefined') EdgeRuntime.waitUntil(trigger)
+    }).catch(() => {})
 
     return jsonResponse({ run_id })
 
